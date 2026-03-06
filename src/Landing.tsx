@@ -1,7 +1,48 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
-const PRICE = process.env.VITE_FOUNDING_PRICE || '59'
-const WAITLIST_ENDPOINT = process.env.VITE_WAITLIST_ENDPOINT || ''
+const PRICE = import.meta.env.VITE_FOUNDING_PRICE || '59'
+const WAITLIST_ENDPOINT = import.meta.env.VITE_WAITLIST_ENDPOINT || ''
+
+function useReveal() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('revealed'); observer.unobserve(el) } },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+function RevealSection({ className, id, children }: { className?: string; id?: string; children: React.ReactNode }) {
+  const ref = useReveal()
+  return <section ref={ref} className={`reveal ${className || ''}`} id={id}>{children}</section>
+}
+
+const IconPen = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+  </svg>
+)
+const IconChart = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+)
+const IconShield = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+)
+const IconLeaf = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 8C8 10 5.9 16.17 3.82 21.34"/><path d="M20.54 5.46A19.92 19.92 0 003.82 21.34"/><path d="M21 3c-3 0-7.5 1.5-10 4.5S7 16 7 16"/>
+  </svg>
+)
 
 export default function Landing(){
   const [email,setEmail]=useState('')
@@ -23,10 +64,20 @@ export default function Landing(){
 
   return (
     <div className="landing-root">
+      <nav className="nav">
+        <a className="nav-brand" href="/">Reframe<span>.</span></a>
+        <ul className="nav-links">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#hipaa">Privacy</a></li>
+        </ul>
+      </nav>
+
       <header className="hero">
         <div className="hero-inner">
+          <div className="hero-badge">Early Access Open</div>
           <h1>Turn racing thoughts into calm, actionable reframes</h1>
-          <p className="sub">Structured thought records · Warm AI reframes · Therapist-ready summaries · Privacy-first</p>
+          <p className="sub">Structured thought records. Warm AI reframes. Therapist-ready summaries. Privacy-first.</p>
 
           <form className="cta-form" onSubmit={submit}>
             <input aria-label="email" placeholder="you@domain.com" value={email} onChange={e=>setEmail(e.target.value)} />
@@ -44,73 +95,83 @@ export default function Landing(){
               </select>
             </div>
             <div className="cta-row">
-              <button className="primary">Join early access</button>
+              <button className="primary" type="submit">Join early access</button>
               <a className="secondary" href="#how">See how it works</a>
             </div>
             <p className="incentive">Free 30-day premium + founding price ${PRICE}/yr (locked)</p>
-            {status==='success' && <p className="success">Thanks — check your inbox</p>}
+            {status==='success' && <p className="success">Thanks — check your inbox!</p>}
             {status==='error' && <p className="error">Something went wrong. Try again.</p>}
           </form>
         </div>
         <div className="hero-mock">
           <div className="mock-card">
-            <div className="thought">I always mess up interviews</div>
-            <div className="reframe">AI: What evidence? Alternative thought: I prepared and can learn.</div>
+            <div className="mock-label">Thought Record</div>
+            <div className="thought">"I always mess up interviews — I'll never get hired."</div>
+            <div className="reframe">
+              <div className="reframe-label">AI Reframe</div>
+              What evidence supports this? You prepared thoroughly and have been hired before. Alternative thought: <em>"I can learn from each interview and improve."</em>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="trust-row">
+      <RevealSection className="trust-row">
         <div className="advisor">Clinical advisor: Dr. Placeholder</div>
         <div className="badges">
           <span>Privacy-first</span>
           <span>Not a replacement for therapy</span>
           <a href="#hipaa">HIPAA-aligned*</a>
         </div>
-        <div className="waitlist">Waitlist: <span id="count">—</span></div>
-      </section>
+        <div className="waitlist">Waitlist: <span id="count">--</span></div>
+      </RevealSection>
 
-      <section className="diffs">
+      <RevealSection className="diffs">
         <h3>Designed for measurable CBT work</h3>
         <ul>
           <li><strong>Structured thought records</strong> with distortions + reframes</li>
           <li><strong>Weekly summaries</strong> + optional PHQ-9/GAD-7 trends</li>
-          <li><strong>ADHD-friendly capture</strong> (voice→text, 30s entries, reminders)</li>
+          <li><strong>ADHD-friendly capture</strong> (voice-to-text, 30s entries, reminders)</li>
           <li><strong>Therapist collaboration</strong> (weekly PDF, revocable share)</li>
           <li><strong>Trauma-safe grounding</strong> mode</li>
         </ul>
-      </section>
+      </RevealSection>
 
-      <section id="how" className="features">
+      <RevealSection className="features" id="how">
         <div className="col">
+          <div className="icon"><IconPen /></div>
           <h4>Thought records</h4>
           <p>Teaching cards that walk you through evidence, automatic distortions detection, and warm AI reframes.</p>
         </div>
         <div className="col">
+          <div className="icon"><IconChart /></div>
           <h4>Progress & exports</h4>
           <p>Weekly insights, PHQ-9/GAD-7 trends, and easy PDF exports for therapists.</p>
         </div>
         <div className="col">
+          <div className="icon"><IconShield /></div>
           <h4>Safety & privacy</h4>
           <p>End-to-end encryption, no model training without opt-in, and a local-only toggle option.</p>
         </div>
         <div className="col">
+          <div className="icon"><IconLeaf /></div>
           <h4>Grounding</h4>
           <p>Trauma-sensitive grounding exercises and quick-capture safety flow.</p>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="pricing">
+      <RevealSection className="pricing" id="pricing">
         <h3>Pricing</h3>
-        <div className="plan">
-          <div className="name">Free</div>
-          <div className="desc">Daily journaling + basic prompts</div>
+        <div className="pricing-grid">
+          <div className="plan">
+            <div className="name">Free</div>
+            <div className="desc">Daily journaling + basic prompts. Everything you need to get started with structured CBT work.</div>
+          </div>
+          <div className="plan premium">
+            <div className="name">Founding Premium</div>
+            <div className="desc">${PRICE}/yr — AI reframes, advanced CBT flows, weekly summaries, therapist export. Price locked forever for early members.</div>
+          </div>
         </div>
-        <div className="plan premium">
-          <div className="name">Founding Premium</div>
-          <div className="desc">${PRICE}/yr — AI reframes, advanced CBT flows, weekly summaries, therapist export</div>
-        </div>
-      </section>
+      </RevealSection>
 
       <footer className="site-footer">
         <div className="links">
@@ -119,31 +180,6 @@ export default function Landing(){
         </div>
         <div className="disclaimer">Not a replacement for therapy. If in crisis, contact emergency services. HIPAA/PHIPA note (placeholder). You own your data; opt-out available.</div>
       </footer>
-
-      <style>{`/* Minimal landing styles to match clawcontrol site */
-      .landing-root{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color:#e6eef8; background:#06080a; min-height:100vh}
-      .hero{display:flex;justify-content:space-between;padding:60px}
-      .hero-inner{max-width:560px}
-      h1{font-size:36px;margin:0 0 12px}
-      .sub{opacity:0.8}
-      .cta-form{margin-top:18px}
-      input{padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);width:100%;margin-bottom:8px;background:transparent;color:inherit}
-      .chips{display:flex;gap:8px;margin-bottom:8px}
-      select{padding:8px;border-radius:8px;background:#0b0d0f;color:inherit}
-      .cta-row{display:flex;gap:12px;align-items:center}
-      .primary{background:#58a6ff;border:none;padding:10px 16px;border-radius:8px;color:#04111a}
-      .secondary{color:#58a6ff}
-      .incentive{margin-top:8px;opacity:0.85}
-      .hero-mock{width:360px}
-      .mock-card{background:#071018;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-      .thought{opacity:0.9}
-      .reframe{margin-top:8px;background:#0b2a3a;padding:8px;border-radius:8px}
-      .trust-row{display:flex;justify-content:space-between;padding:18px 60px;border-top:1px solid rgba(255,255,255,0.02)}
-      .diffs{padding:36px 60px}
-      .features{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;padding:18px 60px}
-      .pricing{padding:24px 60px}
-      .site-footer{padding:18px 60px;border-top:1px solid rgba(255,255,255,0.02);opacity:0.85}
-      `}</style>
     </div>
   )
 }
